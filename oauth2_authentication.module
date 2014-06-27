@@ -3,3 +3,32 @@
  * @file
  * Provides functionality for the OAuth2 Authentication module.
  */
+
+/**
+ * Implements hook_menu().
+ */
+function oauth2_authentication_menu() {
+  $items = array();
+  $items['admin/config/services/oauth2-authentication'] = array(
+    'title' => 'OAuth2 Authentication',
+    'description' => 'Configure OAuth2 Authentication parameters.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('oauth2_authentication_admin_form'),
+    'access arguments' => array('administer oauth2 authentication'),
+    'file' => 'includes/oauth2_authentication.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function oauth2_authentication_permission() {
+  return array(
+    'administer oauth2 authentication' => array(
+      'title' => t('Administer authentication parameters'),
+      'description' => t('Allows users to set authentication parameters such as the token endpoint and client credentials.'),
+    ),
+  );
+}
+
