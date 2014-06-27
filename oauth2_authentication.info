@@ -1,1 +1,10 @@
 name = OAuth2 Authentication
+description = Authenticates Drupal users via OAuth2
+core = 7.x
+package = OAuth2
+
+; Configuration page
+configure = admin/config/services/oauth2-authentication
+
+; Dependencies
+dependencies[] = oauth2_client
