@@ -70,10 +70,6 @@ function oauth2_authentication_form_user_login_block_alter(&$form, &$form_state,
 /**
  * Replacement for user_login_authenticate_validate().
  *
- * user_login_authenticate_validate() determines if a user is valid by looking
- * it up in the local database.  If that's not the case, the user may exist in
- * the remote system.  So we want to add him/her locally if he/she exists there.
- *
  * All code here except for the last stanza should be identical to what's in
  * user_login_authenticate_validate().  The last stanza is the only thing we'd
  * like to change as that's the function call we actually care about.
@@ -117,5 +113,50 @@ function oauth2_authentication_login_authenticate_validate($form, &$form_state) 
     // Set $form_state['uid'] as a flag for user_login_final_validate().
     $form_state['uid'] = oauth2_authentication_authenticate($form_state['values']['name'], $password);
   }
+}
+
+/**
+ * Replacement for user_authenticate().
+ *
+ * user_authenticate() determines if a user is valid by looking it up in the
+ * local database.  If that's not the case, the user may exist in the remote
+ * system.  So we want to add him/her locally if he/she exists there.
+ *
+ * Most of the code here, at the beginning of the function, should mirror
+ * user_authenticate().  If that code fails, then we check if the user exists
+ * remotely.  If so, add it.
+ *
+ * @param $name
+ *   User name to authenticate.
+ * @param $password
+ *   A plain-text password, such as trimmed text from form values.
+ * @return
+ *   The user's uid on success, or FALSE on failure to authenticate.
+ */
+function oauth2_authentication_authenticate($name, $password) {
+  $uid = FALSE;
+  if (!empty($name) && !empty($password)) {
+    $account = user_load_by_name($name);
+    if ($account) {
+      // Allow alternate password hashing schemes.
+      require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
+      if (user_check_password($password, $account)) {
+        // Successful authentication.
+        $uid = $account->uid;
+
+        // Update user to new password scheme if needed.
+        if (user_needs_new_hash($account)) {
+          user_save($account, array('pass' => $password));
+        }
+      }
+    }
+
+    // Check the remote system for the user.
+    else if (oauth2_authentication_check_password($name, $password)) {
+      // It's there so add it here.
+      $uid = oauth2_authentication_create_user($name, $password);
+    }
+  }
+  return $uid;
 }
 
