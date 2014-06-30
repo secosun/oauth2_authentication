@@ -32,3 +32,37 @@ function oauth2_authentication_permission() {
   );
 }
 
+/**
+ * Implements hook_form_FORM_ID_alter() for the user_login form.
+ *
+ * As per user_login_default_validators(), there are three (3) standard
+ * validation functions that determine if a user can be logged in.
+ *
+ *   1. user_login_name_validate()
+ *   2. user_login_authenticate_validate()
+ *   3. user_login_final_validate()
+ *
+ * We need to override the second one because it determines the user validity
+ * based exclusively on its existence in the database.  In our case, if the user
+ * exists as per the remote authorization service, but not locally, we want to
+ * create it.
+ */
+function oauth2_authentication_form_user_login_alter(&$form, &$form_state, $form_id) {
+
+  // Replace the user_login_authenticate_validate() call with our own
+  // oauth2_authentication_login_authenticate_validate() function.
+  if (in_array('user_login_authenticate_validate', $form['#validate'])) {
+    $key = array_search('user_login_authenticate_validate', $form['#validate']);
+    $form['#validate'][$key] = 'oauth2_authentication_login_authenticate_validate';
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the user_login_block form.
+ *
+ * Make the same changes as we're making to the standard login form.
+ */
+function oauth2_authentication_form_user_login_block_alter(&$form, &$form_state, $form_id) {
+  return oauth2_authentication_form_user_login_alter($form, $form_state, $form_id);
+}
+
