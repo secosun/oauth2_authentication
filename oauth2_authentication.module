@@ -60,9 +60,62 @@ function oauth2_authentication_form_user_login_alter(&$form, &$form_state, $form
 /**
  * Implements hook_form_FORM_ID_alter() for the user_login_block form.
  *
- * Make the same changes as we're making to the standard login form.
+ * Make the same changes as we're making to the standard login form.  See
+ * oauth2_authentication_form_user_login_alter() for details.
  */
 function oauth2_authentication_form_user_login_block_alter(&$form, &$form_state, $form_id) {
   return oauth2_authentication_form_user_login_alter($form, $form_state, $form_id);
+}
+
+/**
+ * Replacement for user_login_authenticate_validate().
+ *
+ * user_login_authenticate_validate() determines if a user is valid by looking
+ * it up in the local database.  If that's not the case, the user may exist in
+ * the remote system.  So we want to add him/her locally if he/she exists there.
+ *
+ * All code here except for the last stanza should be identical to what's in
+ * user_login_authenticate_validate().  The last stanza is the only thing we'd
+ * like to change as that's the function call we actually care about.
+ */
+function oauth2_authentication_login_authenticate_validate($form, &$form_state) {
+  $password = trim($form_state['values']['pass']);
+  if (!empty($form_state['values']['name']) && !empty($password)) {
+    // Do not allow any login from the current user's IP if the limit has been
+    // reached. Default is 50 failed attempts allowed in one hour. This is
+    // independent of the per-user limit to catch attempts from one IP to log
+    // in to many different user accounts.  We have a reasonably high limit
+    // since there may be only one apparent IP for all users at an institution.
+    if (!flood_is_allowed('failed_login_attempt_ip', variable_get('user_failed_login_ip_limit', 50), variable_get('user_failed_login_ip_window', 3600))) {
+      $form_state['flood_control_triggered'] = 'ip';
+      return;
+    }
+    $account = db_query("SELECT * FROM {users} WHERE name = :name AND status = 1", array(':name' => $form_state['values']['name']))->fetchObject();
+    if ($account) {
+      if (variable_get('user_failed_login_identifier_uid_only', FALSE)) {
+        // Register flood events based on the uid only, so they apply for any
+        // IP address. This is the most secure option.
+        $identifier = $account->uid;
+      }
+      else {
+        // The default identifier is a combination of uid and IP address. This
+        // is less secure but more resistant to denial-of-service attacks that
+        // could lock out all users with public user names.
+        $identifier = $account->uid . '-' . ip_address();
+      }
+      $form_state['flood_control_user_identifier'] = $identifier;
+
+      // Don't allow login if the limit for this user has been reached.
+      // Default is to allow 5 failed attempts every 6 hours.
+      if (!flood_is_allowed('failed_login_attempt_user', variable_get('user_failed_login_user_limit', 5), variable_get('user_failed_login_user_window', 21600), $identifier)) {
+        $form_state['flood_control_triggered'] = 'user';
+        return;
+      }
+    }
+
+    // We are not limited by flood control, so try to authenticate.
+    // Set $form_state['uid'] as a flag for user_login_final_validate().
+    $form_state['uid'] = oauth2_authentication_authenticate($form_state['values']['name'], $password);
+  }
 }
 
