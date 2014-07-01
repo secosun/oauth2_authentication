@@ -33,6 +33,14 @@ function oauth2_authentication_admin_form($form, &$form_state) {
     '#description' => t('This site\'s secret used for authenticating to the token server.'),
   );
 
+  // Add a text field for the scope.
+  $form['oauth2_authentication_scope'] = array(
+    '#title' => t('Scope'),
+    '#type' => 'textfield',
+    '#default_value' => variable_get('oauth2_authentication_scope', ''),
+    '#description' => t('The scope of the access request.'),
+  );
+
   // Configure the form submission button.
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
@@ -52,6 +60,7 @@ function oauth2_authentication_admin_form_validate($form, &$form_state) {
   $token_endpoint = $form_state['values']['oauth2_authentication_token_endpoint'];
   $client_id      = $form_state['values']['oauth2_authentication_client_id'];
   $client_secret  = $form_state['values']['oauth2_authentication_client_secret'];
+  $scope          = $form_state['values']['oauth2_authentication_scope'];
 
   // Ensure that the token endpoint is a valid URL.
   if (!valid_url($token_endpoint, TRUE)) {
@@ -67,6 +76,8 @@ function oauth2_authentication_admin_form_validate($form, &$form_state) {
   if (empty($client_secret)) {
     form_set_error('oauth2_authentication_client_secret', 'The client secret cannot be empty.');
   }
+
+  // Don't bother checking for a valid scope parameter as it's optional.
 }
 
 /**
@@ -78,6 +89,7 @@ function oauth2_authentication_admin_form_submit($form, &$form_state) {
   $token_endpoint = $form_state['values']['oauth2_authentication_token_endpoint'];
   $client_id      = $form_state['values']['oauth2_authentication_client_id'];
   $client_secret  = $form_state['values']['oauth2_authentication_client_secret'];
+  $scope          = $form_state['values']['oauth2_authentication_scope'];
 
   // Save the token endpoint.
   if (!empty($token_endpoint)) {
@@ -92,6 +104,11 @@ function oauth2_authentication_admin_form_submit($form, &$form_state) {
   // Save the client secret.
   if (!empty($client_secret)) {
     variable_set('oauth2_authentication_client_secret', $client_secret);
+  }
+
+  // Save the scope.
+  if (!empty($scope)) {
+    variable_set('oauth2_authentication_scope', $scope);
   }
 
   drupal_set_message(t('The configuration options have been saved.'));

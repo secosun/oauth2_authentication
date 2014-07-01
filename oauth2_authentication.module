@@ -174,13 +174,13 @@ function oauth2_authentication_check_password($name, $password) {
 
   // Configure the OAuth2 client.
   $oauth2_config = array(
+    'auth_flow'      => 'user-password',
     'token_endpoint' => variable_get('oauth2_authentication_token_endpoint', ''),
-    'auth_flow' => 'user-password',
-    'client_id' => variable_get('oauth2_authentication_client_id', ''),
-    'client_secret' => variable_get('oauth2_authentication_client_secret', ''),
-    'scope' => '.*',
-    'username' => $name,
-    'password' => $password,
+    'client_id'      => variable_get('oauth2_authentication_client_id', ''),
+    'client_secret'  => variable_get('oauth2_authentication_client_secret', ''),
+    'scope'          => variable_get('oauth2_authentication_scope', ''),
+    'username'       => $name,
+    'password'       => $password,
   );
 
   // Attempt to get an access token.
