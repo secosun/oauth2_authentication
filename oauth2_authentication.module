@@ -169,6 +169,8 @@ function oauth2_authentication_authenticate($name, $password) {
  *   The password used by the current user to log in.
  * @return
  *   TRUE if the user exists remotely; FALSE otherwise.
+ *
+ * @todo Return TRUE if a valid token is returned.
  */
 function oauth2_authentication_check_password($name, $password) {
 
@@ -192,6 +194,46 @@ function oauth2_authentication_check_password($name, $password) {
     drupal_set_message($e->getMessage(), 'error');
   }
 
+  // Code goes here.
+
   return FALSE;
+}
+
+/**
+ * Create a new user based on the successful validation of a remote user.
+ *
+ * This function creates a new local Drupal user if a corresponding remote
+ * user exists, but doesn't exist here yet.
+ *
+ * @param $name
+ *   The username of the user to be created.
+ * @param $password
+ *   The password of the user to be created.
+ * @return
+ *   The user ID of the newly created user.  FALSE is returned if the user could
+ *   not be created.
+ */
+function oauth2_authentication_create_user($name, $password) {
+
+  // Get the user's e-mail address from some remote service.
+  $email = oauth2_authentication_get_email($name);
+
+  // Create a list of user information.
+  $user = array(
+    'name'   => $name,
+    'pass'   => $password,
+    'mail'   => $email,
+    'status' => 1,
+    'init'   => $email,
+    'roles'  => array(
+      DRUPAL_AUTHENTICATED_RID => 'authenticated user',
+    ),
+  );
+
+  // Save the new user.
+  $user = user_save(NULL, $user);
+
+  // Return the user's ID.
+  return $user ? $user->uid : FALSE;
 }
 
