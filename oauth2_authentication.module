@@ -237,3 +237,23 @@ function oauth2_authentication_create_user($name, $password) {
   return $user ? $user->uid : FALSE;
 }
 
+/**
+ * Fetches the e-mail address of the user to be created.
+ *
+ * @param $name
+ *   The user's username.
+ * @return
+ *   The user's e-mail address.
+ *
+ * @todo Turn all of these functions into OAuth2AuthenticationClient methods so
+ *   that they can be overridden through subclassing.  This one will return the
+ *   empty string by default, but in most cases, it will really need to do
+ *   something (unless users don't need e-mail addresses, but this seems
+ *   unlikely).
+ * @todo Add a new configuration option for the class name to instantiate.  By
+ *   default, it will be OAuth2AuthenticationClient.
+ */
+function oauth2_authentication_get_email($name) {
+  return '';
+}
+
