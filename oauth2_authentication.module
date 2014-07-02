@@ -155,11 +155,14 @@ function oauth2_authentication_authenticate($name, $password) {
 
     else /* there is no local user account */ {
 
-      // Determine if the user can be authenticated via OAuth2.
-      $client = new OAuth2AuthenticationClient($name, $password);
+      // Instantiate an OAuth2 Authentication class with the credentials.
+      $class = variable_get('oauth2_authentication_class', 'OAuth2AuthenticationClient');
+      $client = new $class($name, $password);
+
+      // Check if the user exists remotely.
       if ($client->userExistsRemotely()) {
 
-        // We're dealing with a valid remote user so add it here.
+        // We're dealing with a valid remote user so create it locally.
         $uid = $client->createUserLocally()->uid;
       }
     }

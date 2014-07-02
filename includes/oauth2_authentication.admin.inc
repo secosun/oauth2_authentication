@@ -41,6 +41,14 @@ function oauth2_authentication_admin_form($form, &$form_state) {
     '#description' => t('The scope of the access request.'),
   );
 
+  // Add a text field for the name of the class to handle the authentication.
+  $form['oauth2_authentication_class'] = array(
+    '#title' => t('Class'),
+    '#type' => 'textfield',
+    '#default_value' => variable_get('oauth2_authentication_class', 'OAuth2AuthenticationClient'),
+    '#description' => t('The name of the class that handles the authentication.  If you have extended the default one to make modifications, enter it here.'),
+  );
+
   // Configure the form submission button.
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
@@ -61,6 +69,7 @@ function oauth2_authentication_admin_form_validate($form, &$form_state) {
   $client_id      = $form_state['values']['oauth2_authentication_client_id'];
   $client_secret  = $form_state['values']['oauth2_authentication_client_secret'];
   $scope          = $form_state['values']['oauth2_authentication_scope'];
+  $class          = $form_state['values']['oauth2_authentication_class'];
 
   // Ensure that the token endpoint is a valid URL.
   if (!valid_url($token_endpoint, TRUE)) {
@@ -78,6 +87,11 @@ function oauth2_authentication_admin_form_validate($form, &$form_state) {
   }
 
   // Don't bother checking for a valid scope parameter as it's optional.
+
+  // Ensure that the class has been defined.
+  if (!class_exists($class)) {
+    form_set_error('oauth2_authentication_class', 'The authentication-handling class has not been defined.  It must exist before it can be used.');
+  }
 }
 
 /**
@@ -90,6 +104,7 @@ function oauth2_authentication_admin_form_submit($form, &$form_state) {
   $client_id      = $form_state['values']['oauth2_authentication_client_id'];
   $client_secret  = $form_state['values']['oauth2_authentication_client_secret'];
   $scope          = $form_state['values']['oauth2_authentication_scope'];
+  $class          = $form_state['values']['oauth2_authentication_class'];
 
   // Save the token endpoint.
   if (!empty($token_endpoint)) {
@@ -109,6 +124,11 @@ function oauth2_authentication_admin_form_submit($form, &$form_state) {
   // Save the scope.
   if (!empty($scope)) {
     variable_set('oauth2_authentication_scope', $scope);
+  }
+
+  // Save the class.
+  if (!empty($class)) {
+    variable_set('oauth2_authentication_class', $class);
   }
 
   drupal_set_message(t('The configuration options have been saved.'));
