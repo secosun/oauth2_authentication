@@ -8,3 +8,6 @@ configure = admin/config/services/oauth2-authentication
 
 ; Dependencies
 dependencies[] = oauth2_client
+
+; Classes
+files[] = classes/OAuth2AuthenticationClient.class.php
