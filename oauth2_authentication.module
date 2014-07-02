@@ -132,6 +132,8 @@ function oauth2_authentication_login_authenticate_validate($form, &$form_state) 
  *   A plain-text password, such as trimmed text from form values.
  * @return
  *   The user's uid on success, or FALSE on failure to authenticate.
+ *
+ * @todo Make the instantiated class configurable.
  */
 function oauth2_authentication_authenticate($name, $password) {
   $uid = FALSE;
@@ -151,12 +153,19 @@ function oauth2_authentication_authenticate($name, $password) {
       }
     }
 
-    // Check the remote system for the user.
-    else if (oauth2_authentication_check_password($name, $password)) {
-      // It's there so add it here.
-      $uid = oauth2_authentication_create_user($name, $password);
+    else /* there is no local user account */ {
+
+      // Determine if the user can be authenticated via OAuth2.
+      $client = new OAuth2AuthenticationClient($name, $password);
+      if ($client->userExistsRemotely()) {
+
+        // We're dealing with a valid remote user so add it here.
+        $uid = $client->createUserLocally()->uid;
+      }
     }
   }
+
+  // Return the user's local ID if there is one.
   return $uid;
 }
 
