@@ -132,8 +132,6 @@ function oauth2_authentication_login_authenticate_validate($form, &$form_state) 
  *   A plain-text password, such as trimmed text from form values.
  * @return
  *   The user's uid on success, or FALSE on failure to authenticate.
- *
- * @todo Make the instantiated class configurable.
  */
 function oauth2_authentication_authenticate($name, $password) {
   $uid = FALSE;

@@ -110,11 +110,11 @@ class OAuth2AuthenticationClient {
   /**
    * Fetches the e-mail address of the user to be created.
    *
+   * This should be overridden.  Otherwise, your users won't have e-mail
+   * addresses.
+   *
    * @return
    *   The user's e-mail address.
-   *
-   * @todo Add a new configuration option for the class name to instantiate.  By
-   *   default, it will be OAuth2AuthenticationClient.
    */
   protected function getUserEmailAddress() {
     return '';
