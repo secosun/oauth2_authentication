@@ -47,8 +47,6 @@ class OAuth2AuthenticationClient {
    *
    * @return
    *   TRUE if the user exists remotely; FALSE otherwise.
-   *
-   * @todo Return TRUE if a valid token is returned.
    */
   public function userExistsRemotely() {
 
@@ -63,18 +61,20 @@ class OAuth2AuthenticationClient {
       'password'       => $this->password,
     );
 
-    // Attempt to get an access token.
     try {
+      // Create an OAuth2 client and attempt to get an access token.  If we
+      // aren't able to, we'll end up in the catch stanza as an exception will
+      // be thrown.
       $oauth2_client = new OAuth2\Client($oauth2_config);
-      $access_token = $oauth2_client->getAccessToken();
+      $user_exists_remotely = !empty($oauth2_client->getAccessToken());
     }
     catch (Exception $e) {
-      drupal_set_message($e->getMessage(), 'error');
+      // We couildn't get an access token for this user so it must not be valid.
+      $user_exists_remotely = FALSE;
     }
 
-    // Code goes here.
-
-    return FALSE;
+    // Return the result.
+    return $user_exists_remotely;
   }
 
   /**
