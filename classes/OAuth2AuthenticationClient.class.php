@@ -104,7 +104,16 @@ class OAuth2AuthenticationClient {
     );
 
     // Save the new user.
-    return user_save(NULL, $user);
+    $user = user_save(NULL, $user);
+
+    // Report the new user in the log.
+    watchdog('oauth2_authentication', 'New user: %name (%email).', array(
+      '%name' => $this->username,
+      '%email' => $email ? $email : 'no e-mail address',
+    ), WATCHDOG_NOTICE, l(t('edit'), 'user/' . $user->uid . '/edit'));
+
+    // Return it.
+    return $user;
   }
 
   /**
