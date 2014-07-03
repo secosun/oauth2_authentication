@@ -120,11 +120,8 @@ function oauth2_authentication_login_authenticate_validate($form, &$form_state) 
  *
  * user_authenticate() determines if a user is valid by looking it up in the
  * local database.  If that's not the case, the user may exist in the remote
- * system.  So we want to add him/her locally if he/she exists there.
- *
- * Most of the code here, at the beginning of the function, should mirror
- * user_authenticate().  If that code fails, then we check if the user exists
- * remotely.  If so, add it.
+ * system.  So we want to add him/her locally if he/she exists there.  If the
+ * user does exist locally, we'd like to add a token to his/her session.
  *
  * @param $name
  *   User name to authenticate.
@@ -134,13 +131,23 @@ function oauth2_authentication_login_authenticate_validate($form, &$form_state) 
  *   The user's uid on success, or FALSE on failure to authenticate.
  */
 function oauth2_authentication_authenticate($name, $password) {
+
+  // Assume the user is invalid until we determine otherwise.
   $uid = FALSE;
+
+  // Only check for a valid user if the username & password were set.
   if (!empty($name) && !empty($password)) {
+
+    // Attempt to load a local user with that name.
     $account = user_load_by_name($name);
+
+    // If the load was successful, we can see if the entered password is valid.
     if ($account) {
-      // Allow alternate password hashing schemes.
+
+      // Allow alternate password hashing schemes in checking the password.
       require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
       if (user_check_password($password, $account)) {
+
         // Successful authentication.
         $uid = $account->uid;
 
@@ -148,6 +155,13 @@ function oauth2_authentication_authenticate($name, $password) {
         if (user_needs_new_hash($account)) {
           user_save($account, array('pass' => $password));
         }
+
+        // Get a remote access token if possible.  If it's not possible, the
+        // user can still log in, but he/she won't be able to access remote
+        // resources.
+        $class = variable_get('oauth2_authentication_class', 'OAuth2AuthenticationClient');
+        $client = new $class($name, $password);
+        $client->getAccessToken();
       }
     }
 

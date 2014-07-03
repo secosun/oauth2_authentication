@@ -49,6 +49,18 @@ class OAuth2AuthenticationClient {
    *   TRUE if the user exists remotely; FALSE otherwise.
    */
   public function userExistsRemotely() {
+    // If we can get an access token for this user, then we know he/she exists
+    // remotely.
+    return $this->getAccessToken();
+  }
+
+  /**
+   * Attempts to get an access token.
+   *
+   * @return
+   *   TRUE if an access token was retrieved; FALSE otherwise.
+   */
+  public function getAccessToken() {
 
     // Configure the OAuth2 client.
     $oauth2_config = array(
@@ -66,15 +78,21 @@ class OAuth2AuthenticationClient {
       // aren't able to, we'll end up in the catch stanza as an exception will
       // be thrown.
       $oauth2_client = new OAuth2\Client($oauth2_config);
-      $user_exists_remotely = !empty($oauth2_client->getAccessToken());
+      $token_retrieved = !empty($oauth2_client->getAccessToken());
     }
     catch (Exception $e) {
       // We couildn't get an access token for this user so it must not be valid.
-      $user_exists_remotely = FALSE;
+      $token_retrieved = FALSE;
     }
 
+    // Report status in the log.
+    watchdog('oauth2_authentication', 'Access token requested for user %name: !result', array(
+      '%name' => $this->username,
+      '!result' => $token_retrieved ? 'SUCCESS' : 'FAILURE',
+    ));
+
     // Return the result.
-    return $user_exists_remotely;
+    return $token_retrieved;
   }
 
   /**
