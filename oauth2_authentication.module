@@ -68,6 +68,21 @@ function oauth2_authentication_form_user_login_block_alter(&$form, &$form_state,
 }
 
 /**
+ * Implements hook_user_logout().
+ *
+ * Purge any access tokens stored in the user's session.  We definitely don't
+ * want these to be used by a different user that logs in sometime between now
+ * and the existing token's expiration time.
+ */
+function oauth2_authentication_user_logout($account) {
+
+  // As using unset() on a global variable may not always unset it outside of
+  // the current scope, simply drop any OAuth2 tokens by assigning an empty
+  // list.
+  $_SESSION['oauth2_client'] = array();
+}
+
+/**
  * Replacement for user_login_authenticate_validate().
  *
  * All code here except for the last stanza should be identical to what's in
