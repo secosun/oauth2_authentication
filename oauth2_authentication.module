@@ -4,6 +4,10 @@
  * Provides functionality for the OAuth2 Authentication module.
  */
 
+/****************************************************************************
+ * Drupal Core Hooks
+ ****************************************************************************/
+
 /**
  * Implements hook_menu().
  */
@@ -68,6 +72,49 @@ function oauth2_authentication_form_user_login_block_alter(&$form, &$form_state,
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter() for the user_profile_form form.
+ *
+ * Disable editing of externally-controlled user profile fields.  These user
+ * attributes would normally be controlled by another CRM-type system.  To set
+ * which fields are to enabled or disabled, go to the module configuration page.
+ * By default, they are all disabled.
+ */
+function oauth2_authentication_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
+
+  // We want to keep user fields editable for user administrators so exit if the
+  // current user is one of them.
+  if (($user->uid == 1) || user_access('administer users')) {
+    return;
+  }
+
+  // Get configuration info on which user attributes are not to be edited.
+  $disable_email = !variable_get('oauth2_authentication_user_edit_email', FALSE);
+  $disable_password_change = !variable_get('oauth2_authentication_user_edit_password', FALSE);
+
+  // Disable the current password field if neither the e-mail nor the password
+  // fields are editable.  It's only needed if one wishes to edit either of
+  // those fields.
+  $disable_password_current = ($disable_email && $disable_password_change);
+
+  // Disable editing of the E-mail Address field if was configured as such.
+  if ($disable_email) {
+    $form['account']['mail']['#disabled'] = TRUE;
+  }
+
+  // Disable editing of the Password & Confirm Password fields if they were
+  // configured as such.
+  if ($disable_password_change) {
+    $form['account']['pass']['#disabled'] = TRUE;
+  }
+
+  // Disable editing of the Current Password field if was configured as such.
+  if ($disable_password_current) {
+    $form['account']['current_pass']['#disabled'] = TRUE;
+  }
+}
+
+/**
  * Implements hook_user_logout().
  *
  * Purge any access tokens stored in the user's session.  We definitely don't
@@ -81,6 +128,10 @@ function oauth2_authentication_user_logout($account) {
   // list.
   $_SESSION['oauth2_client'] = array();
 }
+
+/****************************************************************************
+ * Drupal Core Function Replacements
+ ****************************************************************************/
 
 /**
  * Replacement for user_login_authenticate_validate().
