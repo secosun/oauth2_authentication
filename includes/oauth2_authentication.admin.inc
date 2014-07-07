@@ -74,11 +74,21 @@ function oauth2_authentication_admin_form($form, &$form_state) {
     '#default_value' => variable_get('oauth2_authentication_user_edit_password', FALSE),
   );
 
+  // Define the set of fields for miscellaneous settings.
+  $form['misc'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Miscellaneous settings'),
+    '#tree' => TRUE,
+    '#description' => t('These settings don\'t fit into any of the other major categories.'),
+    '#weight' => 20,
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
   // Add a text field for the name of the class to handle the authentication.
-  $form['class'] = array(
+  $form['misc']['class'] = array(
     '#title' => t('Client class'),
     '#type' => 'textfield',
-    '#weight' => 20,
     '#default_value' => variable_get('oauth2_authentication_class', 'OAuth2AuthenticationClient'),
     '#description' => t('The name of the class that handles the authentication.  If you have extended the default one to make modifications, enter it here.'),
   );
@@ -104,7 +114,7 @@ function oauth2_authentication_admin_form_validate($form, &$form_state) {
   $client_id      = $form_state['values']['server']['client_id'];
   $client_secret  = $form_state['values']['server']['client_secret'];
   $scope          = $form_state['values']['server']['scope'];
-  $class          = $form_state['values']['class'];
+  $class          = $form_state['values']['misc']['class'];
 
   // Ensure that the token endpoint is a valid URL.
   if (!valid_url($token_endpoint, TRUE)) {
@@ -123,7 +133,7 @@ function oauth2_authentication_admin_form_validate($form, &$form_state) {
 
   // Ensure that the class has been defined.
   if (!class_exists($class)) {
-    form_set_error('class', 'The authentication-handling class has not been defined.  It must exist before it can be used.');
+    form_set_error('misc][class', 'The authentication-handling class has not been defined.  It must exist before it can be used.');
   }
 }
 
@@ -137,7 +147,7 @@ function oauth2_authentication_admin_form_submit($form, &$form_state) {
   $client_id      = $form_state['values']['server']['client_id'];
   $client_secret  = $form_state['values']['server']['client_secret'];
   $scope          = $form_state['values']['server']['scope'];
-  $class          = $form_state['values']['class'];
+  $class          = $form_state['values']['misc']['class'];
   $edit_email     = $form_state['values']['user']['edit_email'];
   $edit_password  = $form_state['values']['user']['edit_password'];
 
