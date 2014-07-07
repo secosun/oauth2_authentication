@@ -20,7 +20,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   );
 
   // Add a text field for the token endpoint.
-  $form['server']['oauth2_authentication_token_endpoint'] = array(
+  $form['server']['token_endpoint'] = array(
     '#title' => t('Token endpoint URL'),
     '#type' => 'textfield',
     '#default_value' => variable_get('oauth2_authentication_token_endpoint', 'https://idp.example.com/token'),
@@ -28,7 +28,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   );
 
   // Add a text field for the client ID.
-  $form['server']['oauth2_authentication_client_id'] = array(
+  $form['server']['client_id'] = array(
     '#title' => t('Client ID'),
     '#type' => 'textfield',
     '#default_value' => variable_get('oauth2_authentication_client_id', ''),
@@ -36,7 +36,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   );
 
   // Add a text field for the client secret.
-  $form['server']['oauth2_authentication_client_secret'] = array(
+  $form['server']['client_secret'] = array(
     '#title' => t('Client secret'),
     '#type' => 'textfield',
     '#default_value' => variable_get('oauth2_authentication_client_secret', ''),
@@ -44,7 +44,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   );
 
   // Add a text field for the scope.
-  $form['server']['oauth2_authentication_scope'] = array(
+  $form['server']['scope'] = array(
     '#title' => t('Scope'),
     '#type' => 'textfield',
     '#default_value' => variable_get('oauth2_authentication_scope', ''),
@@ -75,7 +75,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   );
 
   // Add a text field for the name of the class to handle the authentication.
-  $form['oauth2_authentication_class'] = array(
+  $form['class'] = array(
     '#title' => t('Client class'),
     '#type' => 'textfield',
     '#weight' => 20,
@@ -100,30 +100,30 @@ function oauth2_authentication_admin_form($form, &$form_state) {
 function oauth2_authentication_admin_form_validate($form, &$form_state) {
 
   // Fetch the form values.
-  $token_endpoint = $form_state['values']['server']['oauth2_authentication_token_endpoint'];
-  $client_id      = $form_state['values']['server']['oauth2_authentication_client_id'];
-  $client_secret  = $form_state['values']['server']['oauth2_authentication_client_secret'];
-  $scope          = $form_state['values']['server']['oauth2_authentication_scope'];
-  $class          = $form_state['values']['oauth2_authentication_class'];
+  $token_endpoint = $form_state['values']['server']['token_endpoint'];
+  $client_id      = $form_state['values']['server']['client_id'];
+  $client_secret  = $form_state['values']['server']['client_secret'];
+  $scope          = $form_state['values']['server']['scope'];
+  $class          = $form_state['values']['class'];
 
   // Ensure that the token endpoint is a valid URL.
   if (!valid_url($token_endpoint, TRUE)) {
-    form_set_error('server][oauth2_authentication_token_endpoint', 'The token endpoint is not a valid URL.');
+    form_set_error('server][token_endpoint', 'The token endpoint is not a valid URL.');
   }
 
   // Ensure that the client ID has been set.
   if (empty($client_id)) {
-    form_set_error('server][oauth2_authentication_client_id', 'The client ID cannot be empty.');
+    form_set_error('server][client_id', 'The client ID cannot be empty.');
   }
 
   // Ensure that the client secret has been set.
   if (empty($client_secret)) {
-    form_set_error('server][oauth2_authentication_client_secret', 'The client secret cannot be empty.');
+    form_set_error('server][client_secret', 'The client secret cannot be empty.');
   }
 
   // Ensure that the class has been defined.
   if (!class_exists($class)) {
-    form_set_error('oauth2_authentication_class', 'The authentication-handling class has not been defined.  It must exist before it can be used.');
+    form_set_error('class', 'The authentication-handling class has not been defined.  It must exist before it can be used.');
   }
 }
 
@@ -133,11 +133,11 @@ function oauth2_authentication_admin_form_validate($form, &$form_state) {
 function oauth2_authentication_admin_form_submit($form, &$form_state) {
 
   // Fetch the form values.
-  $token_endpoint = $form_state['values']['server']['oauth2_authentication_token_endpoint'];
-  $client_id      = $form_state['values']['server']['oauth2_authentication_client_id'];
-  $client_secret  = $form_state['values']['server']['oauth2_authentication_client_secret'];
-  $scope          = $form_state['values']['server']['oauth2_authentication_scope'];
-  $class          = $form_state['values']['oauth2_authentication_class'];
+  $token_endpoint = $form_state['values']['server']['token_endpoint'];
+  $client_id      = $form_state['values']['server']['client_id'];
+  $client_secret  = $form_state['values']['server']['client_secret'];
+  $scope          = $form_state['values']['server']['scope'];
+  $class          = $form_state['values']['class'];
   $edit_email     = $form_state['values']['user']['edit_email'];
   $edit_password  = $form_state['values']['user']['edit_password'];
 
