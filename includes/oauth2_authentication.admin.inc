@@ -9,8 +9,18 @@
  */
 function oauth2_authentication_admin_form($form, &$form_state) {
 
+  // Define the set of fields for the server settings.
+  $form['server'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Server settings'),
+    '#tree' => TRUE,
+    '#weight' => 0,
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
   // Add a text field for the token endpoint.
-  $form['oauth2_authentication_token_endpoint'] = array(
+  $form['server']['oauth2_authentication_token_endpoint'] = array(
     '#title' => t('Token endpoint URL'),
     '#type' => 'textfield',
     '#default_value' => variable_get('oauth2_authentication_token_endpoint', 'https://idp.example.com/token'),
@@ -18,7 +28,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   );
 
   // Add a text field for the client ID.
-  $form['oauth2_authentication_client_id'] = array(
+  $form['server']['oauth2_authentication_client_id'] = array(
     '#title' => t('Client ID'),
     '#type' => 'textfield',
     '#default_value' => variable_get('oauth2_authentication_client_id', ''),
@@ -26,7 +36,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   );
 
   // Add a text field for the client secret.
-  $form['oauth2_authentication_client_secret'] = array(
+  $form['server']['oauth2_authentication_client_secret'] = array(
     '#title' => t('Client secret'),
     '#type' => 'textfield',
     '#default_value' => variable_get('oauth2_authentication_client_secret', ''),
@@ -34,17 +44,41 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   );
 
   // Add a text field for the scope.
-  $form['oauth2_authentication_scope'] = array(
+  $form['server']['oauth2_authentication_scope'] = array(
     '#title' => t('Scope'),
     '#type' => 'textfield',
     '#default_value' => variable_get('oauth2_authentication_scope', ''),
     '#description' => t('The scope of the access request.'),
   );
 
+  // Define the set of fields for the server settings.
+  $form['user'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('User settings'),
+    '#tree' => TRUE,
+    '#description' => t('By default, users will not be allowed to edit their passwords or e-mail addresses as these will normally be handled by a separate CRM-type system.  If you\'d like to make these fields user-editable, you may do so, but be warned that changes within Drupal will not be automatically sent to the other system.'),
+    '#weight' => 10,
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['user']['edit_email'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow users to edit their e-mail addresses'),
+    '#default_value' => variable_get('oauth2_authentication_user_edit_email', FALSE),
+  );
+
+  $form['user']['edit_password'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow users to change their passwords'),
+    '#default_value' => variable_get('oauth2_authentication_user_edit_password', FALSE),
+  );
+
   // Add a text field for the name of the class to handle the authentication.
   $form['oauth2_authentication_class'] = array(
-    '#title' => t('Class'),
+    '#title' => t('Client class'),
     '#type' => 'textfield',
+    '#weight' => 20,
     '#default_value' => variable_get('oauth2_authentication_class', 'OAuth2AuthenticationClient'),
     '#description' => t('The name of the class that handles the authentication.  If you have extended the default one to make modifications, enter it here.'),
   );
@@ -54,6 +88,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save configuration'),
+    '#weight' => 30,
   );
 
   return $form;
@@ -65,28 +100,26 @@ function oauth2_authentication_admin_form($form, &$form_state) {
 function oauth2_authentication_admin_form_validate($form, &$form_state) {
 
   // Fetch the form values.
-  $token_endpoint = $form_state['values']['oauth2_authentication_token_endpoint'];
-  $client_id      = $form_state['values']['oauth2_authentication_client_id'];
-  $client_secret  = $form_state['values']['oauth2_authentication_client_secret'];
-  $scope          = $form_state['values']['oauth2_authentication_scope'];
+  $token_endpoint = $form_state['values']['server']['oauth2_authentication_token_endpoint'];
+  $client_id      = $form_state['values']['server']['oauth2_authentication_client_id'];
+  $client_secret  = $form_state['values']['server']['oauth2_authentication_client_secret'];
+  $scope          = $form_state['values']['server']['oauth2_authentication_scope'];
   $class          = $form_state['values']['oauth2_authentication_class'];
 
   // Ensure that the token endpoint is a valid URL.
   if (!valid_url($token_endpoint, TRUE)) {
-    form_set_error('oauth2_authentication_token_endpoint', 'The token endpoint is not a valid URL.');
+    form_set_error('server][oauth2_authentication_token_endpoint', 'The token endpoint is not a valid URL.');
   }
 
   // Ensure that the client ID has been set.
   if (empty($client_id)) {
-    form_set_error('oauth2_authentication_client_id', 'The client ID cannot be empty.');
+    form_set_error('server][oauth2_authentication_client_id', 'The client ID cannot be empty.');
   }
 
   // Ensure that the client secret has been set.
   if (empty($client_secret)) {
-    form_set_error('oauth2_authentication_client_secret', 'The client secret cannot be empty.');
+    form_set_error('server][oauth2_authentication_client_secret', 'The client secret cannot be empty.');
   }
-
-  // Don't bother checking for a valid scope parameter as it's optional.
 
   // Ensure that the class has been defined.
   if (!class_exists($class)) {
@@ -100,11 +133,13 @@ function oauth2_authentication_admin_form_validate($form, &$form_state) {
 function oauth2_authentication_admin_form_submit($form, &$form_state) {
 
   // Fetch the form values.
-  $token_endpoint = $form_state['values']['oauth2_authentication_token_endpoint'];
-  $client_id      = $form_state['values']['oauth2_authentication_client_id'];
-  $client_secret  = $form_state['values']['oauth2_authentication_client_secret'];
-  $scope          = $form_state['values']['oauth2_authentication_scope'];
+  $token_endpoint = $form_state['values']['server']['oauth2_authentication_token_endpoint'];
+  $client_id      = $form_state['values']['server']['oauth2_authentication_client_id'];
+  $client_secret  = $form_state['values']['server']['oauth2_authentication_client_secret'];
+  $scope          = $form_state['values']['server']['oauth2_authentication_scope'];
   $class          = $form_state['values']['oauth2_authentication_class'];
+  $edit_email     = $form_state['values']['user']['edit_email'];
+  $edit_password  = $form_state['values']['user']['edit_password'];
 
   // Save the token endpoint.
   if (!empty($token_endpoint)) {
@@ -131,5 +166,10 @@ function oauth2_authentication_admin_form_submit($form, &$form_state) {
     variable_set('oauth2_authentication_class', $class);
   }
 
+  // Save the user checkboxes.
+  variable_set('oauth2_authentication_user_edit_email', $edit_email);
+  variable_set('oauth2_authentication_user_edit_password', $edit_password);
+
+  // Report status.
   drupal_set_message(t('The configuration options have been saved.'));
 }
