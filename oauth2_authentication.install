@@ -16,4 +16,6 @@ function oauth2_authentication_uninstall() {
   variable_del('oauth2_authentication_client_secret');
   variable_del('oauth2_authentication_scope');
   variable_del('oauth2_authentication_class');
+  variable_del('oauth2_authentication_user_edit_email');
+  variable_del('oauth2_authentication_user_edit_password');
 }
