@@ -37,6 +37,34 @@ function oauth2_authentication_permission() {
 }
 
 /**
+ * Implements hook_menu_alter().
+ *
+ * Alter some core menu functionality to potentially disable some items.
+ */
+function oauth2_authentication_menu_alter(&$items) {
+  global $user, $language;
+
+  // Set the path for password resets.
+  $path = 'user/password';
+
+  // Restrict the password reset page to user administrators if password editing
+  // is disabled.
+  if ((!variable_get('oauth2_authentication_user_edit_password', FALSE)) &&
+      ($user->uid != 1)) {
+    $items[$path]['access callback'] = 'user_access';
+    $items[$path]['access arguments'] = array('administer users');
+
+    // Add support for language-prefixed paths.  There doesn't appear to be an
+    // easy way to get them so let's use global variables to do so.
+    if (($language->language != LANGUAGE_NONE) && (!empty($language->prefix))) {
+      $prefix = $language->prefix;
+      $items[$prefix . '/' . $path]['access callback'] = 'user_access';
+      $items[$prefix . '/' . $path]['access arguments'] = array('administer users');
+    }
+  }
+}
+
+/**
  * Implements hook_form_FORM_ID_alter() for the user_login form.
  *
  * As per user_login_default_validators(), there are three (3) standard
