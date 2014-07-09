@@ -93,6 +93,7 @@ function oauth2_authentication_form_user_login_alter(&$form, &$form_state, $form
  * Implements hook_form_FORM_ID_alter() for the user_login_block form.
  */
 function oauth2_authentication_form_user_login_block_alter(&$form, &$form_state, $form_id) {
+  global $user;
 
   // Make the same changes as we're making to the standard login form.  See
   // oauth2_authentication_form_user_login_alter() for details.
