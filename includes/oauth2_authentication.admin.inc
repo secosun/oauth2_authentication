@@ -23,6 +23,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   $form['server']['token_endpoint'] = array(
     '#title' => t('Token endpoint URL'),
     '#type' => 'textfield',
+    '#required' => TRUE,
     '#default_value' => variable_get('oauth2_authentication_token_endpoint', 'https://idp.example.com/token'),
     '#description' => t('A valid URL from where access tokens can be retrieved.'),
   );
@@ -31,6 +32,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   $form['server']['client_id'] = array(
     '#title' => t('Client ID'),
     '#type' => 'textfield',
+    '#required' => TRUE,
     '#default_value' => variable_get('oauth2_authentication_client_id', ''),
     '#description' => t('This sites\'s ID for authenticating to the token server.'),
   );
@@ -39,6 +41,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   $form['server']['client_secret'] = array(
     '#title' => t('Client secret'),
     '#type' => 'textfield',
+    '#required' => TRUE,
     '#default_value' => variable_get('oauth2_authentication_client_secret', ''),
     '#description' => t('This site\'s secret used for authenticating to the token server.'),
   );
@@ -89,6 +92,7 @@ function oauth2_authentication_admin_form($form, &$form_state) {
   $form['misc']['class'] = array(
     '#title' => t('Client class'),
     '#type' => 'textfield',
+    '#required' => TRUE,
     '#default_value' => variable_get('oauth2_authentication_class', 'OAuth2AuthenticationClient'),
     '#description' => t('The name of the class that handles the authentication.  If you have extended the default one to make modifications, enter it here.'),
   );
@@ -119,16 +123,6 @@ function oauth2_authentication_admin_form_validate($form, &$form_state) {
   // Ensure that the token endpoint is a valid URL.
   if (!valid_url($token_endpoint, TRUE)) {
     form_set_error('server][token_endpoint', 'The token endpoint is not a valid URL.');
-  }
-
-  // Ensure that the client ID has been set.
-  if (empty($client_id)) {
-    form_set_error('server][client_id', 'The client ID cannot be empty.');
-  }
-
-  // Ensure that the client secret has been set.
-  if (empty($client_secret)) {
-    form_set_error('server][client_secret', 'The client secret cannot be empty.');
   }
 
   // Ensure that the class has been defined.
