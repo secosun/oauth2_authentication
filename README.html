@@ -108,6 +108,9 @@
         On failure, the user will still be logged in, but will not get a token.
         Whenever a request to get a token is made, the results are reported in the log.
       </li>
+      <li>
+        Once you've got this set up, you'll have to ensure that <a href="https://www.drupal.org/node/2292623">the Web-services client module you're using</a> supports the OAuth2 protocol (i.e. token access to resources).  If you're already using one that doesn't, you'll have to add that support.  Otherwise, go with one that supports this already.
+      </li>
     </ul>
 
     <h2>Issues</h2>
