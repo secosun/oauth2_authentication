@@ -78,7 +78,8 @@ class OAuth2AuthenticationClient {
       // aren't able to, we'll end up in the catch stanza as an exception will
       // be thrown.
       $oauth2_client = new OAuth2\Client($oauth2_config);
-      $token_retrieved = !empty($oauth2_client->getAccessToken());
+      $token = $oauth2_client->getAccessToken();
+      $token_retrieved = isset($token);
     }
     catch (Exception $e) {
       // We couildn't get an access token for this user so it must not be valid.
