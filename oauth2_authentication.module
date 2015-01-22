@@ -242,6 +242,10 @@ function oauth2_authentication_authenticate($name, $password) {
     // Attempt to load a local user with that name.
     $account = user_load_by_name($name);
 
+    // Instantiate an OAuth2 Authentication class with the credentials.
+    $class = variable_get('oauth2_authentication_class', 'OAuth2AuthenticationClient');
+    $client = new $class($name, $password);
+
     // If the load was successful, we can see if the entered password is valid.
     if ($account) {
 
@@ -260,9 +264,14 @@ function oauth2_authentication_authenticate($name, $password) {
         // Get a remote access token if possible.  If it's not possible, the
         // user can still log in, but he/she won't be able to access remote
         // resources.
-        $class = variable_get('oauth2_authentication_class', 'OAuth2AuthenticationClient');
-        $client = new $class($name, $password);
         $client->getAccessToken();
+      } else {
+        // Maybe the remote password has changed and the user is trying new password.
+
+        // Check if the user exists remotely.  If so update their account/password.
+        if ($client->userExistsRemotely()) {
+          $uid = $client->updateUserLocally($account)->uid;
+        }
       }
     }
 

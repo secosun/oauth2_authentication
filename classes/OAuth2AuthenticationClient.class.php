@@ -135,6 +135,43 @@ class OAuth2AuthenticationClient {
     return $user;
   }
 
+  /*
+   * Update a user based on the successful validation of a remote user.
+   *
+   * This function updates an existing local Drupal user if a corresponding
+   * remote user exists.
+   *
+   * A typical use case for this is when a user's password has changed in the
+   * OAuth2 provider system but the local Drupal user has an old password entry
+   * in the users table.
+   *
+   * @param $account
+   *   The user object to be updated.
+   *
+   * @return
+   *   A fully-loaded $user object upon successful update or FALSE on failure.
+   */
+  public function updateUserLocally($account) {
+    // Create a list of user information.
+    $user = array(
+      'pass'   => $this->password,
+      'status' => 1,
+      'roles'  => array(
+        DRUPAL_AUTHENTICATED_RID => 'authenticated user',
+      ),
+    );
+
+    // Update the account with the new information.
+    $account = user_save($account, $user);
+
+    // Report the updated user in the log.
+    watchdog('oauth2_authentication', 'Updated user: %name.', array(
+      '%name' => $this->username,
+    ), WATCHDOG_NOTICE, l(t('edit'), 'user/' . $account->uid . '/edit'));
+
+    return $account;
+  }
+
   /**
    * Fetches the e-mail address of the user to be created.
    *
